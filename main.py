@@ -43,8 +43,6 @@ class Snake:
             self.y.append(-1)
 
         def draw(self):
-            self.parent_screen.fill(BACKGROUND_COLOR)
-
             for i in range(self.length):
                 self.parent_screen.blit(self.block, (self.x[i], self.y[i]))   
 
@@ -82,8 +80,15 @@ class Snake:
 class Game:
         def __init__(self):
             pygame.init()
+
+            # Set text on the window bars
+            pygame.display.set_caption("Belajar Programming yuk Din :D")
+
+            # Sound
+            pygame.mixer.init()
+            # self.play_bgm()
+            self.snake_slow = 0.3
             self.surface = pygame.display.set_mode((800,600))
-            self.surface.fill(BACKGROUND_COLOR)  
             self.snake = Snake(self.surface, 2)  
             self.snake.draw()
             self.apple = Apple(self.surface)
@@ -95,36 +100,62 @@ class Game:
                 if y1 >= y2 and y1 < y2 + SIZE:
                     return True
             return False
-       
+        
+        def play_sound(self, sound):
+            # Create function for playing sound effect
+            sound = pygame.mixer.Sound(f"resources/{sound}.mp3")
+            pygame.mixer.Sound.play(sound)
+
+        def play_bgm(self):
+            # Playing bgm
+            pygame.mixer.music.load('resources/bg_music_1.mp3')
+            pygame.mixer.music.play(-1, 0)
+
+        def render_background(self):
+            bg = pygame.image.load("resources/background.jpg")
+            self.surface.blit(bg, (0, 0))
+                    
         def play(self):
+             self.render_background()
              self.snake.walk()
              self.apple.draw()    
              self.display_score()
              pygame.display.flip()
 
              # Check if collision occur with apple
-             if self.is_collision(self.snake.x[0], self.snake.y[0], self.apple.x, self.apple.y):
-                 self.snake.increase_length()
-                 self.apple.move()
-
+             for i in range(self.snake.length):
+                 if self.is_collision(self.snake.x[i], self.snake.y[i], self.apple.x, self.apple.y):
+                     # self.play_sound("ding")     
+                     self.snake_slow -= 0.01          
+                     self.snake.increase_length()
+                     self.apple.move()
+                 
              # Check if snake is colliding with itself
              for i in range(3, self.snake.length):
                  if self.is_collision(self.snake.x[0], self.snake.y[0], self.snake.x[i], self.snake.y[i]):
+                     #self.play_sound("crash")
                      raise "Game over"      
+
+             # Check if snake is colliding with boundaries
+             if self.is_collision(0 <= self.snake.x[0] <= 800 and 0 <= self.snake.y[0] <= 600):
+                 raise "Crashed the boundaries"
+                     
         
         def show_game_over(self):
-            self.surface.fill(BACKGROUND_COLOR)
+            self.render_background()
             font = pygame.font.SysFont('arial', 15)
             line1 = font.render(f"Game Over! Your score is {self.snake.length - 2}", True, FONT_COLOR)
             self.surface.blit(line1, (150, 300))
             line2 = font.render(f"To play again press Enter. To quit press Escape.", True, FONT_COLOR)
             self.surface.blit(line2, (150, 330))
             pygame.display.flip()
+            pygame.mixer.music.pause()
 
         def reset(self):
             # Resetting the game
             self.snake = Snake(self.surface, 2)
             self.apple = Apple(self.surface)
+            self.snake_slow = 0.3
             
         def display_score(self):
             font = pygame.font.SysFont('arial', 15)
@@ -145,6 +176,7 @@ class Game:
                         # Restart key is Enter
                         if event.key == K_RETURN:
                             pause = False
+                            pygame.mixer.music.unpause()
 
                         if not pause:
                             # Movement keys is movement arrow
@@ -173,7 +205,7 @@ class Game:
                     pause = True
                     self.reset()
 
-                time.sleep(0.3)        
+                time.sleep(self.snake_slow)        
                            
 if __name__ == "__main__":
     game = Game()
