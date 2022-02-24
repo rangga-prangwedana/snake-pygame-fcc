@@ -137,7 +137,7 @@ class Game:
                      raise "Game over"      
 
              # Check if snake is colliding with boundaries
-             if self.is_collision(0 <= self.snake.x[0] <= 800 and 0 <= self.snake.y[0] <= 600):
+             if not (0 <= self.snake.x[0] <= 800 and 0 <= self.snake.y[0] <= 600):
                  raise "Crashed the boundaries"
                      
         
